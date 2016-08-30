@@ -1,3 +1,4 @@
+# New Here? 
 Just added the class? Remember to ask to join the `students` team. Also make sure to have the following software installed:  
 - [R][download-r] Statistical Programming Language
 - [RStudio][download-rstudio] Integrated Development Environment
