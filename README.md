@@ -17,7 +17,7 @@ Your code should be readable and reproducible. We recommend using [RMarkdown][ma
 ### To turn in your assignment: 
 1. To start, [**fork** the '530-exploration' repository][forking]. 
 1. [**Clone**][ref-clone] the repository to your computer.
-1. Modify the files and [**commit**][ref-commit] changes to complete your solution. _Do not change the file name, otherwise git will not be able to track changes_
+1. Modify the files and [**commit**][ref-commit] changes to complete your solution. _Do not change the filename, otherwise git will not be able to track changes_
 1. [**Push**][ref-push]/sync the changes up to GitHub.
 1. [Create a **pull request**][pull-request] on the original repository to turn in the assignment. 
 
