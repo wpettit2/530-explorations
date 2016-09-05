@@ -22,8 +22,10 @@ Your code should be readable and reproducible. We recommend using [RMarkdown][ma
 1. [Create a **pull request**][pull-request] on the original repository to turn in the assignment. 
 
 ### Feedback
-
 After you submit your pull request, Professor Bowers will review your code and provide in-line feedback within the pull request. 
+
+### Keeping Your Fork Updated
+You'll need to update your fork when we release a new assignment. You can find instructions for updating or [rebasing your fork __here__][rebase].  
 
 <!-- Links -->
 [download-r]: https://cran.r-project.org/
@@ -40,3 +42,4 @@ After you submit your pull request, Professor Bowers will review your code and p
 [ref-push]: http://gitref.org/remotes/#push
 [pull-request]: https://help.github.com/articles/creating-a-pull-request
 [markdown-lessons]: http://rmarkdown.rstudio.com/lesson-1.html
+[rebase]: https://robots.thoughtbot.com/keeping-a-github-fork-updated
