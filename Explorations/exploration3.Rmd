@@ -1,22 +1,22 @@
 ---
 title: 'Exploration 3: Description of Relationships II'
-author: 'Jake Bowers'
+author: "Jake Bowers"
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
-bibliography: classbib.bib
-fontsize: 10pt
-geometry: margin=1in
-mainfont: "Crimson Text"
-graphics: yes
 output:
+  pdf_document:
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 4
+    latex_engine: xelatex
   html_document:
     fig_caption: yes
     fig_height: 4
     fig_width: 4
-  pdf_document:
-    latex_engine: xelatex
-    fig_caption: yes
-    fig_height: 4
-    fig_width: 4
+geometry: margin=1in
+graphics: yes
+mainfont: Crimson Text
+fontsize: 10pt
+bibliography: classbib.bib
 ---
 
 <!-- Make this document using library(rmarkdown); render("exploration1.Rmd") -->
@@ -74,12 +74,84 @@ options(error=function(){options(prompt="> ",continue="+ ");NULL})
 
 "I found some data that might bear on this question."
 
+
+# We usually use linear regression first because it's easier to interpret and use. The linear regression model assumes that there is a straight-line relationship between the variables. If the true relationship is not linear, then the prediction accuracy of the model is compromised. However, the advantage of nonlinear regression is that it can produce good estimates of the unknown parameters in the model with relatively small data sets. 
+
+#But nonlinear regression is more sensitive to outliers. When there are outliers in the data, the results might be affected. Also, there are fewer model validation tools to detect outliers in nonlinear regression than there are for linear regression. Several other disadvantages of using nonlinear regression include: the effect of each predictor has on the response can be less intuitive to understand; p-values cannot be calculated for the predictors; confidence intervals may not be calculable. 
+
+#We should take note that anespi16 is a small dataset. Nonlinear regression works better with smaller dataset. A shortcoming in the "fttrump" variable is that it's difficult to gauge the difference in the feeling thermometer on Trump. For example, we can't tell the exact differences between an 85 from an 87. Not everyone understands temperature in the same way; one person's understanding of cold may be another's hot.
+
+# First we will start with linear regression on age and support for Trump. According to the codebook, age is "birthyr" and support for Trump is "fttrump". Below is the summary on birthyr and fttrump.
+summary(anespi16$fttrump)
+summary(anespi16$birthyr)
+
+# Then we look at linear least regression between the two variables. The interpretation is as follows: The greater the birth year is (meaning the older the person is), the less support for Trump. And for every 3 years younger in age, there is 1 point drop in support for Trump on the feeling thermometer.
+
+lmLinear <- lm(fttrump~birthyr, data=anespi16, subset=fttrump<=100)
+summary(lmLinear)
+coef(lmLinear)
+   
+# We then plot the data
+with(anespi16,plot(fttrump,birthyr))
+with(subset(anespi16, fttrump<=100),plot(birthyr,fttrump))
+
+# Find the sum of the squares of the residuals. 
+sum(lmLinear$residuals^2)
+
+# List of the residuals and then plot a density plot 
+resid(lmLinear)
+plot(density(resid(lmLinear)))
+
+# By looking at the plot, there is no strong relation between age and support for Trump. We may have a non-linear relation. 
+
+
 ```{r}
 download.file("http://jakebowers.org/Data/ANES/anes_pilot_2016_csv.zip",destfile="anespilot2016.csv.zip")
 unzip("anespilot2016.csv.zip")
 anespi16<-read.csv("anes_pilot_2016.csv",as.is=TRUE,strip.white=TRUE)
 ```
 
+# We move on to nonlinear regression. 
+# First, we create a new dataset that takes out the outliers in fttrump
+trump <- subset(anespi16, anespi16$fttrump <=100)
+
+#Global vs. local regression 
+#Global regression looks at the whole datasets to fit flexible non-linear function, whereas local regression separates the data into groups and only looks at the local nearby points. 
+We will do one global but non-linear smoothed solution, one global linear smoothed solution, and two local non-linear smoothed solution. 
+
+#global linear smoothed solution <- linear splines <- lm with knots
+#By choosing the knots we choose what year the data is split at. Knots are the point where the coefficient change. Last week, we said least squared model was the best way to introduce a linear relation. This week, we have to add knots to smooth out the line. The bs function generates the entire matrix of basis functions for splines with the specified set of knots. When choosing the knots, it's common to make them uniform, so we chose these three knots: 25, 50, 75. 
+
+library(splines)
+fit <- lm(fttrump~bs(birthyr, knots=c(25,50,75), data=trump)
+plot(fit)
+summary(fit)
+
+# Results, Strengths, Weaknesses of global linear smoothed solution
+# The summary gives us 6 coefficients, 3 of which are NA. 3 are not defined because of singularities since there may be collinearity in the data. The column of estimate is in fact the coefficient. We tried to figure out on our own but it was difficult for us to understand and interpret the results. The advantage of this method is that with just a few knots, we can reproduce just any curve. The degrees of freedom are calculated correctly so we can trust the results. Smoothing splines are useful for displaying trends but we should figure out why the data is noisy to begin with instead of being content with smoothing. 
+
+#global non-linear smoothed <- smoothing spline
+#More degrees of freedom makes the model more accurate but less degrees of freedom makes the whole line more uniform. We are running a smoothing spline regression because it's one of the best ways to fit a curve line onto extremely noisy data. 
+
+fit1<- smooth.spline(trump$birthyr, trump$fttrump, df=16)
+summary(fit1)
+plot(fit1)
+
+# Result, Strengths, Weaknesses of global non-linear smoothed solution 
+# There is no coefficient in this case. By plotting fit1, we can say those who are over 70~80 years old are more likely to support Trump. There is a huge drop for those who are 35 years old or younger; these people are not likely to support Trump. As you can see, it is useful to visualize the results by plotting. This graph gives you a quasi-linear relation between age and support for Trump. Intuitively, this makes sense that older people would support Trump more than younger people. The disadvantage is that you can't tell the exact point at which the support for Trump drops. Is the drop at 1940 or 1980? Because there clearly is a drop from 1920 to 1940 but not so much from 1960 to 1980. The relation is not linear so we can't find a coefficient to signal a general trend in the data. 
+
+#local non-linear smoothed <- LOESS
+# We use the LOESS function for the two local non-linear smoothed regression. We change the span in the second version to show different results. LOESS allows us to specify the points for the local parameter. The larger the span, the smoother the fit; the smaller the span, the more accurate the fit. For example, smaller span means splitting the data into more sections, which is more accurate but results in less smoother fit. 
+
+fit2 <- loess(trump$fttrump~ trump$birthyr, span=0.25)
+fit3 <- loess(trump$fttrump~ trump$birthyr, span=0.1)
+plot(fit2)
+plot(fit3)
+
+# Result, Strengths, Weaknesses of local non-linear smoothed solution 
+# There is no coefficient in this case. The residual standard error is similar in both cases. We know that smaller residual standard error means there is a better fit. We are not fully sure what the number 36 mean on residual standard error, but we are guessing it may be that people who are younger 36 are less likely to support Trump. The equivalent number of parameters is larger for the second version (fit3), which makes sense since we used smaller span by splitting the data into more sections. One advantage of using LOESS is that it's very flexible, which is ideal for modeling complex processes when we don't have a theoretical model. We are not required to use a specific function to fit a model for all of the data in the sample, which is different from before when we used the knots. All you need to do here is to provide a smoothing parameter value and a degree of the local polynomial. LOESS also provides a theory for computing uncertainty for predictions and calibrations. The disadvantage of using LOESS is that it doesn't produce a regression function that is easily presented by a mathematical formula, thus making it difficult to transfer the results to other people. This method is prone to the effects of outliers. 
+
+# Looking at the four solutions, we suggest using the global non-linear solution. This method provides a visually representation of the relations between age and support for Trump. The numbers in this solution is easier to interpret as well. Just on a side note, the support for Trump may be associated with variables other than age. For example, education, income, and race. Perhaps, you can discuss with your team to look at these variables. People like Larry Sabato and Nate Silver have shown their statistical work that those may be the true drivers for the support or not support for Trump on their websites.
+
+
 "Oh. Also, before I run, I can tell you that the two sides are now yelling about 'global' versus 'local' smoothers. And I don't even hear them talking about the kinds of questions you've talked with me about in regards overly influential points and methods for handling them. I know that if I don't go back with at least one global but non-linear smoothed solution, one global linear smoothed solution, and two local non-linear smoothed solution, I'm going to look silly and they will ignore me, even though I'm the leader of this team! I need to act with authority, so I need to be able to say why I made the choices I made and why I avoided other choices. I will need to explain the strengths and weakness of my choices, but to defend one choice above others in order to act decisively in this cyber-theater. Help!"
-
-
