@@ -1,5 +1,5 @@
 ---
-title: 'Exploration 4: Describing Counterfactual Causal Relationships'
+title: 'Exploration 4: Two Variables Relationships as Causal Relationships'
 author: 'Jake Bowers'
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 bibliography: classbib.bib
@@ -71,11 +71,49 @@ options(error=function(){options(prompt="> ",continue="+ ");NULL})
 ```
 
 
+```{r datasetup, cache=TRUE}
+download.file("http://jakebowers.org/Data/ANES/anes_pilot_2016_csv.zip",destfile="anespilot2016.csv.zip")
+unzip("anespilot2016.csv.zip")
+anespi16<-read.csv("anes_pilot_2016.csv",as.is=TRUE,strip.white=TRUE)
+```
+
+You friend calls back. "I really appreciated all of the work that you did with
+describing the relationships between age and Trump support. Of course, as soon
+as your results came in, the team began to bicker: "Older people like Trump
+because they are just inherently conservative. It is not age per se that causes
+this relationship, but the fact that ideology changes over time within the life
+span." then the others argued, "First, there is no fact that ideology changes
+over time within the life span. Second, I think that this relationship just
+shows that people who are older have had more time to dislike Clinton --- the
+young people don't know that much about the Clintons, and so they are not yet
+disillusioned." And other group argued, "So one of you is saying that age
+causes Trump support because ideology is related to age? And the other is that
+age causes Trump support because political knowledge and experience is related
+to age? But, both of you seem to be ignoring the nonlinear descriptions that we
+did. Didn't it seem like there were different age groups that responded to
+Trump differently? Don't you think that this is caused by the fact that the
+ethnic composition of the country has changed, and that Trump consistently
+offends non-white voters? That is, that the relationship is caused by the
+underlying relationship between age and ethnicity and Trump's offensive
+comments?"
+
+"I started to try to calm the waters in my team, but I only go this far."
+
 ```{r}
-library(readstata13)
-countries <- read.dta13("http://jakebowers.org/Data/Countries/DemocracyCross-NationalData-V4.1-09092015.dta",convert.factors=FALSE)
+table(anespi16$fttrump,useNA="ifany")
+table(anespi16$birthyr,useNA="ifany")
+
+anespi16$fttrump[anespi16$fttrump==998]<-NA
+anespi16$age <- 2016-anespi16$birthyr
+
+summary(anespi16$age)
+summary(anespi16$fttrump)
 
 ```
+
+"First, I was getting confused about the use of the word, 'cause'. I didn't quite know what they meant. And, I didn't know how to start using the data on hand to engage with these alternative causal explanations if I didn't know what they meant by cause. The problem is now that I'm back abroad, I can't ask them. What is your best guess? Can you explain it to me? For example, why would thinking about cause one way help me use data to engage with these kinds of arguments? And, of course, I'm relying on you for your advice about which explanation is correct. Please help!  I'm also wondering about your own favorite explanation. One that is not one of those three. What is it? What is the evidence in favor of it or against it?"
+
+
 
 # References
 
