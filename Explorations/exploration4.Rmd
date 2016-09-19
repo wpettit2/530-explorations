@@ -101,19 +101,96 @@ comments?"
 
 ```{r}
 table(anespi16$fttrump,useNA="ifany")
+#The code above is showing the support for Donald Trump. More specifically, it is showing the distribution of answers in the dataset, saying how many people answered each different possible answer between 0 and 100 while also displaying how many NA responses are in the dataset
 table(anespi16$birthyr,useNA="ifany")
-
+#This code is doing the same as the first table code, except it is showing the distribution of answers to the question of what year the respondents were born in. This is a good way to see a visual representation of how old the respondents were without having to plot the answers
 anespi16$fttrump[anespi16$fttrump==998]<-NA
+#This chunk of code is making it so that any respondents who answered 998 in their feeling thermometer measurement of Donald Trump will instead be recoded to NA. This is done in order to make sure that down the road the data is not skewed by three outliers that are not even a possible answer for the question
 anespi16$age <- 2016-anespi16$birthyr
-
+#The chunk ofcode above is making a new vector inside of the anespi16 dataset. Instead of having to use the birhtyr vector, this new chunk of code creates a vector that converts birthyr to the age of the respondent. This allows for a more simple interpretation of the current data along with future regressions/functions
 summary(anespi16$age)
+#This simply summarizes the multiple statistics surrounding the new age vector in the dataset. It gives many different things such as means, maximums, and quartiles to show the breakdown of age in the respondents in this dataset
 summary(anespi16$fttrump)
-
+#This chunk of code is summarizing the support for Donald Trump now that the three outliers have been removed from the data, giving a more accurate representation of the data distribution in the dataset
 ```
 
 "First, I was getting confused about the use of the word, 'cause'. I didn't quite know what they meant. And, I didn't know how to start using the data on hand to engage with these alternative causal explanations if I didn't know what they meant by cause. The problem is now that I'm back abroad, I can't ask them. What is your best guess? Can you explain it to me? For example, why would thinking about cause one way help me use data to engage with these kinds of arguments? And, of course, I'm relying on you for your advice about which explanation is correct. Please help!  I'm also wondering about your own favorite explanation. One that is not one of those three. What is it? What is the evidence in favor of it or against it?"
 
+First of all, you need to have an understanding of the word cause, and have an idea of what causation means in a statistical sense along with being able to apply it in R in order to see which variables may be causing support for Trump more than others. Causality is tied to an action (or manipulation, treatment, or intervention) applied to a unit. In order for two events to be considered causal, they must satisfy certain conditions. Some of these conditions are that the events are contiguous, one of the events must precede the other, and the events must occur regularly in conjunction with each other. Simply put, the events must occur together with one of the events seeming to predict how the second event will play out. Causation is important to distinguish from simple correlation, because correlation only implies that a relationship merely exists. It seems to us that your group wants to know what is affecting the relationship, not just if the relationship even exists. So for that reason, it is important that when you run your data analysis you run some functions that do their best to determine causality.
 
+When trying to measure causation, it is important to note that there is no regression technique, no statistical analysis at all that can test a causal relationship. Causality is no property contained in the data. The only way to adress causality is to perform a controlled experiment, where you know in advance that only the condition changed by the researcher and nothing else can be responsible for a possible change in the response. If you have only observational data, which is the case here with your conundrum, you can only guess about causal relations. A correlation of the respective variables would then be shown with such a speculation, but it will never be a proof, or even a strong support. And the lack of a correlation would not indicate that there is no causal relation.
+
+In order to test this causality then, we must create an experiment. One of the best and most simple ways to try showing causality, specifically through using R software, would be to use linear regressions measuring the effect that certain independent variables will have on the dependent variable. However, it is not enough to run the ordinary least squares model like we have been doing in previous research. We will need to do something which is called "matching" which will be done by running linear regression models on the variables while also holding certain other variables at a certain constant. By doing this, we are ensuring that there is no variability in these other variables. In making sure that there is little to no variability in the variables that could potentially be influencing the outcome of the regression, you will be making sure what the effect of the specific independent variable is on the dependent variable. 
+
+For example, you and your group seem to be arguing about whether ideology, political knowledge/experience, or ethnicity are the determining factor in support for Trump rather than age. The best way that we see to test this, which we will further explore later in this paper, would be to run regressions using each of these potential explanations as independent variables while also keeping the other potential explanatory variables at a certain constant. This will allow us to see just how much each of the variables is affecting the levels of support for Trump without having to worry about other factors. 
+
+Now we can get into the code and get into answering your questions. We will need to run regressions, as previously mentioned, but before that we must determine how we will measure each of these variables, and decide which variable will serve best for our purposes. One of your arguments you want help solving is whether or not ideology is actually what is leading to support for Trump rather than age in itself. For this, we will use the lcself variable in the dataset, which asked each of the respondents to measure their political ideology on a scale of 1-7, 1 being the most liberal and 7 being the most conservative. In measuring political knowledge, we feel it is best to use the pk_spend variable. This asked respondents to pick the area that the United States spends the least of their money on. By getting this question right, the respondent will demonstrate a certain level of political knowledge. Finally, you want to measure how ethnicity might play a role in deciding support. For this, we will use the race variable, which asked each respondent to self-report their ethnicity. 
+
+First, we will run a regression using political ideology as the independent variable. Keep in mind that as the Independent variable goes up, that means the respondent will be more conservative. Here, we will be matching each of the other explanatory variables at a certain value that they will remain at in order to ensure that each of the other regressions are in the same environment. However, we run into a problem with our pk_spend variable, due to it being measured nominally rather than with numbers. We will not be able to do regressions later on without converting this variable into number responses, so we must use the following code. 
+Install the package "car", which will allow us to help convert the dataset.
+```{r}
+install.packages("car", repos="http://cron.rstudio.com")
+#Next, simply load the package so that you can use it
+library("car")
+#Now we want to recode the pk_spend variable. We will recode it so that correct answers are given the value of 1 and all incorrect answers are given the value of 0, so that as the pk_spend variable goes up, political knowledge goes up. This can be done by using this code written below
+knowledge<- recode(anespi16$pk_spend, "1=1;else=0")
+#Now we have a new variable that we can use to measure political knowledge using numbers rather than names. 
+
+```
+Lastly, before we begin running our regressions, you mentioned you would like us to determine another thing that could potentially be explaining support for Donald Trump. From what we have noticed, Trump mentions the economy alot, and there are many of his supporters who believe that the economy is only getting worse. Therefore, we propose that we should find people who believe that the economy is getting worse under President Obama and measure their support for Trump. We believe that as people think the economy is getting worse, they will be more likely to vote for Donald Trump because they see Hillary as a continuation of the same old policies that will continue to hurt the United States. Thankfully, we found a vector in this datset that measures just that. The vector, "econnow" measures on a scale of 1-5 how respondents viewed the economy in relation to a year ago, with a score of 1 meaning the respondent believed the economy was much better now than 1 year ago and a score of 5 meaning the respondent believed the economy was much worse. We need to choose this vector now because we will use it in our regressions and match it at a certain point, allowing us to "control" in some sort of way for that other explanation. 
+
+Now that we have all of our potential explanatory variables selected, we can start running our regressions. First, we will run a simple correlation function to determine whether or not a relationship exists between age and ideology in the first place. After all, a point of contention in your group was whether it was higher age leading to higher conservatism, which was leading to support for Trump, so we will first run that code
+```{r}
+cor(anespi16$lcself, anespi16$age)
+#This returns us with a coefficient of .184, indicating that a relationship does indeed exist. In fact, it does suggest that as age goes higher, we find a rather significant increase in those who say that they indentify as more conservative. 
+
+#Now that we have shown that a relationship does exist between these two variables, now we can run a regression with ideology and support for Trump to see whether or not a strong relationship exists there. To do this, we will run a least squares regression of these two variables, while using the subset function in R to match each of the other variables at a certain value, thus enabling us to keep the other variables from influencing the results. We will keep the race variable at race!=1, to take all respondents who were not white, the political knowledge variable at pk_spend=1 to take the respondents who answered the question correctly, and the economy variable at econnow=1, for those who believed that the economy is better than it used to be. After that, we will run the same regression but flip the subset variables to the other side so that we have multiple examples for each regression
+lm(fttrump ~ lcself, data=anespi16, subset=race!=1&knowledge==1&econnow==1)
+lm1a<- lm(fttrump ~ lcself, data=anespi16, subset=race!=1&knowledge==1&econnow==1)
+#As you can see, we are saving each of the regressions under a new variable so that we can use these variables to get more information on each regression.
+lm(fttrump ~ lcself, data=anespi16, subset=race==1&knowledge!=1&econnow==5)
+lm1b<- lm(fttrump ~ lcself, data=anespi16, subset=race==1&knowledge!=1&econnow==5)
+#The results of these regressions show that a relationship does exist between ideology and support for Trump. The coefficient that the regression returns is -2.054, which indicates that among respondents who were not white, knowledgable, and believed the economy is better than it used to be supported Trump less as their ideology went more conservative. While this seems to be against what one would assume, the important thing to observe is that the relationship exists and we can measure that strength using the coefficient. Another potential way to look at this regression would be to sum its residuals. The lower the sum of the residual squares, the better fitting the line that comes from the regression is. If the line fits well, one may stand to assume that the line is representative of the data, meaning that it is a good explanation of the data. 
+sum(lm1a$residuals^2)
+sum(lm1b$residuals^2)
+#Each of these summations provide us with very high residual numbers, which we can take as the idea that this explanation is not necessarily the strongest one. However, we will need to run the other regressions in order to compare the results.
+```
+The next regression we will run will use the race variable as the Independent variable. We will keep the other explanatory variables at their same levels as previously used, and we will code lcself as 1:3 in the first regression (using respondents who were more liberal) and 5:7 in the second regression (using more conservative respondents). The code is as follows
+```{r}
+lm(fttrump ~ race, data=anespi16, subset=lcself==1:3&knowledge==1&econnow==1)
+lm2a<- lm(fttrump ~ race, data=anespi16, subset=lcself==1:3&knowledge==1&econnow==1)
+lm(fttrump ~ race, data=anespi16, subset=lcself==5:7&knowledge!=1&econnow==5)
+lm2b<- lm(fttrump ~ race, data=anespi16, subset=lcself==5:7&knowledge!=1&econnow==5)
+#The first regression returns us with a coefficient of 29.29, which is substantially larger than the ideology coefficient returned us. However, this is simply one of the two ways we are attempting to measure these variables, so now we run the sum of the residuals of each of the two new variables.
+sum(lm2a$residuals^2)
+sum(lm2b$residuals^2)
+#The sum of the residuals for the first regression comes back at 133.0476, which is nearly 70 times lower than either of the first two regressions. These much smaller residuals coupled with the much higher coefficient seem to suggest that ethnicity plays a much larger factor in determining support for trump than ideology.
+```
+The third pair of regressions we will run concern using political knowledge as the measurement of support for Trump. Here, we will first run another correlation function between age and political knowledge, seeing as some of your group argued that with age came knowledge, and with knowledge came disapproving of Hillary and, by proxy, supporting Trump. Although it is certainly a leap to say that disapproving of the Clinton's will necessarily lead to a higher feeling thermometer score of Trump, we will give your colleagues the benefit of the doubt here and assume that is correct. First, the correlation function would look like this
+```{r}
+cor(anespi16$pk_spend, anespi16$age)
+#This returns a coefficient of .113 (keep in mind that higher scores on the pk_spend varaible means higher political knowledge). This means that there is indeed a relationship that exists between age and knowledge, with older people having a better chance to answer the knowledge question correctly. That means we can now run the pair of regressions, measuring the effect that political knowledge has on support for Donald Trump. Again, keep in mind that the regressions will use the same subset data as was mentioned in the previous regressions.
+lm(fttrump ~ knowledge, data=anespi16, subset=race!=1&lcself==1:3&econnow==1)
+lm3a<- lm(fttrump ~ knowledge, data=anespi16, subset=race!=1&lcself==1:3&econnow==1)
+lm(fttrump ~ knowledge, data=anespi16, subset=race==1&lcself==5:7&econnow==5)
+lm3b<- lm(fttrump ~ knowledge, data=anespi16, subset=race==1&lcself==5:7&econnow==5)
+#These two regressions return fairly high coefficients, with the second regression actually bringing in a coefficient of -32.11, the highest so far. This can be interpreted as saying that among respondents who were white, more conservative, and believed the economy is worse scored lower on support for Trump as their knowledge goes up, implying that Trump seems to do much better among those who are not politically educated. Next, we will look at the sum of the residuals for each regression
+sum(lm3a$residuals^2)
+sum(lm3b$residuals^2)
+#In examining these residual sums, we find extremely high answers. Now we come to an issue regarding the interpretation of these results: which is valued more? Should we look at the sum of the residuals or should we place more weight on the coefficients seeing as we have conflicting results?
+```
+Finally, we will look at our last variable, the economy compared to a year ago. Again, we expect that a higher answer in the econnow variable will lead to more support for Trump, since he is appealing to those who think the economy is getting worse. We will run this pair of regressions keeping the subsets the same as in the previous regressions. 
+```{r}
+lm(fttrump ~ econnow, data=anespi16, subset=race!=1&knowledge==1&lcself==1:3)
+lm4a<- lm(fttrump ~ econnow, data=anespi16, subset=race!=1&knowledge==1&lcself==1:3)
+lm(fttrump ~ econnow, data=anespi16, subset=race==1&knowledge!=1&lcself==5:7)
+lm4b<- lm(fttrump ~ econnow, data=anespi16, subset=race==1&knowledge!=1&lcself==5:7)
+#From these regressions, we are returned with relatively small coefficients, with -8 being the highest. This seems to indicate that the relationship between feelings on the economy are not the highest predictor of support for Trump, but we will first compare the sum of the residuals.
+sum(lm4a$residuals^2)
+sum(lm4b$residuals^2)
+#The sum of the residuals are not anywhere close to the 133 that was found with the race variable, so we can combine this statement with the previous one to show that while feelings on the economy can indeed affect support for Trump, it does not appear to be the strongest predictor.
+```
+To summarize, we ran many regressions and compared coefficients and residuals all while subsetting other potential other explanatory variables to keep the results as accurate as possible. The race variable returned the smalled sum of residuals by far, while the political knowledge variable returned the largest coefficient. We take this to mean that both of these variables are strong predictors of support for Trump, and this seems to be as close to causation as we can demonstrate without having recreated experiments using counterfactual arguments. We would like to know whether the residuals or the coefficient are more important in determing the strenth of the relationship moving forward, but we can take our knowledge to this point and say that both ethnicity and political knowledge seem to be the highest predictors of support for Donald Trump.
 
 # References
 
