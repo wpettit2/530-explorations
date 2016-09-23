@@ -1,0 +1,125 @@
+---
+title: 'Exploration 5: Engaging with Alternative Explanations with Randomized Experiments'
+author: 'Jake Bowers'
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+bibliography: classbib.bib
+fontsize: 10pt
+geometry: margin=1in
+mainfont: "Crimson Text"
+graphics: yes
+output:
+  html_document:
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 4
+  pdf_document:
+    latex_engine: xelatex
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 4
+---
+
+<!-- Make this document using library(rmarkdown); render("exploration1.Rmd") -->
+\input{mytexsymbols}
+
+
+```{r include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+
+## To make the html file do
+## render("exploration1.Rmd",output_format=html_document(fig_retina=FALSE))
+## To make the pdf file do
+## render("exploration1.Rmd",output_format=pdf_document())
+
+require(knitr)
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small",    # slightly smaller font for code
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132,
+  size='footnotesize',
+  out.width='.9\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA)
+```
+
+
+```{r initialize,echo=FALSE}
+##First, just setup the R environment for today:
+if(!file.exists('figs')) dir.create('figs')
+
+options(SweaveHooks=list(fig=function(){
+			   par(mar=c(3.5, 3, 1.1, 0),
+			       pty="s",
+			       mgp=c(1.5,0.5,0),
+			       oma=c(0,0,0,0))},
+			 echo=function(){options(continue=" ") ##Don't show "+" prompts,
+			 options(prompt=" ")
+			 }),
+	digits=4,
+	scipen=8,
+	width=132
+	)
+options(error=function(){options(prompt="> ",continue="+ ");NULL})
+```
+
+With the election coming up, you receive a new request for adjudication of a
+causal claim: "I believe that we should have rallies and promise targeted goods
+to towns, in this way I can most strongly encourage people to turn out to vote
+(citing Gerber and Green on election day parties), and will increase the civic
+health of our nation!" Another candidate says, "This is bad for public goods
+provision, shouldn't we meet and debate rationally about how I will act once I
+am president? These parties and promises sound almost like bribery and this
+cannot be good for the health of democracy let alone effective economic
+policies."
+
+You have the chance to answer this question using data from an experiment
+conducted in Benin (see the materials in
+<http://jakebowers.org/Data/FujiwaraWantchekon2013>).
+
+```{r datasetup, cache=TRUE}
+library(readstata13)
+surveydat<-read.dta13("http://www.jakebowers.org/Data/FujiwaraWantchekon2013/20110167_data/survey_data_AEJ.dta",convert.factors=FALSE)
+electdat<-read.dta13("http://www.jakebowers.org/Data/FujiwaraWantchekon2013/20110167_data/AEJ_elec_data.dta",convert.factors=FALSE)
+```
+
+You show how the proportion of people who say that they receive cash from the campaign was reduced in the treated villages:
+
+```{r}
+## Check the design: table(surveydat$depcom,surveydat$treat)
+surveydat %>% group_by(treat) %>% summarize(cash=mean(cash))
+## or with(surveydat, tapply(cash,treat,mean))
+surveydat %>% group_by(treat) %>% summarize(index=mean(index))
+electdat %>% group_by(treat) %>% summarize(mean(participation))
+```
+
+Just as you show the same thing about voter participation using the
+electoral data, but the candidates start bickering again.
+
+"You can't just show us those numbers! Where are the control variables?
+Shouldn't you only be comparing villages that are identical with each other? I
+bet at least one covariate, measured or unmeasured, is imbalanced with respect
+to the randomization, so you can see that randomization is not at all special.
+I bet that candidates had town hall meetings rather than rallies in villages
+where they knew that they were not going to give out much cash/where they knew
+that clientelistic responses would not gain that much traction. You probably
+just told the candidates to hold the town hall meetings where clientelistic
+practices would not have done them much good. You are just anti-clientelist! I
+know that you rigged this comparison! The so called control villages don't
+really reflect how the treated villages would have behaved without rallies."
+(You can't really tell who is asking which question.) How can you respond so
+that these candidates believe that you are making an interpretable comparison?
+What was the effect of the experiment on the giving of cash? Why would anyone
+think that a study with 24 villages ought to be a good way to learn about the
+effect of different styles of campaigning?
+
+
+# References
+
