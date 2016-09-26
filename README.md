@@ -25,7 +25,8 @@ Your code should be readable and reproducible. We recommend using [RMarkdown][ma
 After you submit your pull request, Professor Bowers will review your code and provide in-line feedback within the pull request. 
 
 ### Keeping Your Fork Updated
-You'll need to update your fork when we release a new assignment. You can find instructions for updating or [rebasing your fork __here__][rebase]. Unlike the basic push and pull commands, there are no button for these actions in RStudio. You'll need to open the shell by clicking the gear icon in the git panel.  
+You'll need to update your fork when we release a new assignment. You can find instructions for updating or [rebasing your fork __here__][rebase]. Unlike the basic push and pull commands, there are no button for these actions in RStudio. You'll need to open the shell by clicking the gear icon in the git panel. If you are a Mac user using RStudio to push to git via https, you may need to run this:  
+>git config --global credential.helper osxkeychain
 
 <!-- Links -->
 [download-r]: https://cran.r-project.org/

@@ -1,0 +1,148 @@
+---
+title: 'Exploration 5: Engaging with Alternative Explanations with Randomized Experiments'
+author: 'Jake Bowers'
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+bibliography: classbib.bib
+fontsize: 10pt
+geometry: margin=1in
+mainfont: "Crimson Text"
+graphics: yes
+output:
+  html_document:
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 4
+  pdf_document:
+    latex_engine: xelatex
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 4
+---
+
+<!-- Make this document using library(rmarkdown); render("exploration1.Rmd") -->
+\input{mytexsymbols}
+
+
+```{r include=FALSE, cache=FALSE}
+# Some customization.  You can alter or delete as desired (if you know what you are doing).
+# knitr settings to control how R chunks work.
+
+## To make the html file do
+## render("exploration1.Rmd",output_format=html_document(fig_retina=FALSE))
+## To make the pdf file do
+## render("exploration1.Rmd",output_format=pdf_document())
+
+require(knitr)
+opts_chunk$set(
+  tidy=FALSE,     # display code as typed
+  size="small",    # slightly smaller font for code
+  echo=TRUE,
+  results='markup',
+  strip.white=TRUE,
+  fig.path='figs/fig',
+  cache=FALSE,
+  highlight=TRUE,
+  width.cutoff=132,
+  size='footnotesize',
+  out.width='.9\\textwidth',
+  fig.retina=FALSE,
+  message=FALSE,
+  comment=NA)
+```
+
+
+```{r initialize,echo=FALSE}
+##First, just setup the R environment for today:
+if(!file.exists('figs')) dir.create('figs')
+
+options(SweaveHooks=list(fig=function(){
+			   par(mar=c(3.5, 3, 1.1, 0),
+			       pty="s",
+			       mgp=c(1.5,0.5,0),
+			       oma=c(0,0,0,0))},
+			 echo=function(){options(continue=" ") ##Don't show "+" prompts,
+			 options(prompt=" ")
+			 }),
+	digits=4,
+	scipen=8,
+	width=132
+	)
+options(error=function(){options(prompt="> ",continue="+ ");NULL})
+```
+
+With the election coming up, you receive a new request for adjudication of a
+causal claim: "I believe that we should have rallies and promise targeted goods
+to towns, in this way I can most strongly encourage people to turn out to vote
+(citing Gerber and Green on election day parties), and will increase the civic
+health of our nation!" Another candidate says, "This is bad for public goods
+provision, shouldn't we meet and debate rationally about how I will act once I
+am president? These parties and promises sound almost like bribery and this
+cannot be good for the health of democracy let alone effective economic
+policies."
+
+You have the chance to answer this question using data from an experiment
+conducted in Benin (see the materials in
+<http://jakebowers.org/Data/FujiwaraWantchekon2013>).
+
+```{r datasetup, cache=TRUE}
+library(readstata13)
+surveydat<-read.dta13("http://www.jakebowers.org/Data/FujiwaraWantchekon2013/20110167_data/survey_data_AEJ.dta",convert.factors=FALSE)
+electdat<-read.dta13("http://www.jakebowers.org/Data/FujiwaraWantchekon2013/20110167_data/AEJ_elec_data.dta",convert.factors=FALSE)
+```
+
+You show how the proportion of people who say that they receive cash from the campaign was reduced in the treated villages:
+
+```{r}
+#Load dplyr to make it work
+library(dplyr)
+## Check the design: table(surveydat$depcom,surveydat$treat)
+surveydat %>% group_by(treat) %>% summarize(cash=mean(cash))
+##The above code is looking at the survey data, then grouping the response of the code into whether or not the answer was a part of the treatment group or not, and then summarizing the difference in how much cash was given out in what could be called a clientelist sort of way.
+## or with(surveydat, tapply(cash,treat,mean))
+surveydat %>% group_by(treat) %>% summarize(index=mean(index))
+#This chunk of code is summarizing the difference in the amount of clientelism that was experienced and groups the summaries into whether or not the village was a part of the treatment group or a part of the control group.
+electdat %>% group_by(treat) %>% summarize(mean(participation))
+#This final piee of code is meant to summarize the amount of participation in the villages and separate it into whether or not the villages were a part of the treatment group or the control group.
+```
+
+Just as you show the same thing about voter participation using the
+electoral data, but the candidates start bickering again.
+
+"You can't just show us those numbers! Where are the control variables?
+Shouldn't you only be comparing villages that are identical with each other? I
+bet at least one covariate, measured or unmeasured, is imbalanced with respect
+to the randomization, so you can see that randomization is not at all special.
+I bet that candidates had town hall meetings rather than rallies in villages
+where they knew that they were not going to give out much cash/where they knew
+that clientelistic responses would not gain that much traction. You probably
+just told the candidates to hold the town hall meetings where clientelistic
+practices would not have done them much good. You are just anti-clientelist! I
+know that you rigged this comparison! The so called control villages don't
+really reflect how the treated villages would have behaved without rallies."
+(You can't really tell who is asking which question.) How can you respond so
+that these candidates believe that you are making an interpretable comparison?
+What was the effect of the experiment on the giving of cash? Why would anyone
+think that a study with 24 villages ought to be a good way to learn about the
+effect of different styles of campaigning?
+
+
+# References
+
+
+In order to assure these quarrelling candidates about the way to go about campaigning and also that the research done by Fujiwara and Wantchekon is indeed a good way to measure the effects of clientelist and town hall approaches to campaigning, we will discuss the idea of randomization and what it means for the research being done in this study, for we believe that the idea of randomization holds the key to understanding how and why the treatment was administered in this research. 
+
+Put simply, randomization is the the assignment by chance of people/groups to either the control or the treatment group, done so in order to ensure that selection bias is avoided at all costs. Since choosing to assign certain people to certain groups can lead to selection bias (like one of the candidates was suggesting was the case), the idea of randomization in this study is very important to understand. By ensuring that the villages appointed to both the control and the treatment groups are random, we are doing our best to ensure that the selection bias does not come into play. 
+
+This study by Fujiwara and Wantchekon is a study of randomization in a real world setting. Not only are these scholars attempting to study the effects that different campaigning styles will have, they are doing so with real candidates in a real election where clientelism has historically taken place. This real world randomization experiment has some pros and cons, both of which are discussed in the Gerber and Green introduction. One of the major pros of doing this experiment in a real world setting is that the true effect can be measured of changing the method of campaigning. In more controlled settings, the participants who volunteered would be guaranteed to be exposed to the treatments and/or the control, but we know in the real world that even when something changes, it is not noticed by all. By doing the real world setting for this experiment, the authors are finding out what effect the treatment would truly have in an environment where the villagers do not even know an experiment is going on, thus making the results even more compelling when trying to apply it to real world settings. A potential negative of this type of experiment is the extreme difficulty that comes with trying to implement this type of research design. These scholars had to coordinate and work with 4 of the leading candidates in a presidential election, yet they were able to do so. Understanding the real world design of this research is important to finding the true value of this research. 
+
+Now, we will move to addressing the concerns of the candidate that is attempting to dispute the findings of the research article. First, you want to know where the control variables are. While on the surface this seems to be a reasonable question, it is one that comes with a relatively simple answer: there does not need to be any. The authors, and thererfore we, arent using control variables because the treated and control villages are balanced and therefore do not require us to pick specific control vairables like race or sex, etc. Also, the experimenter typically exercises this control through random assignment. By randomly assigning subjects to treatments, the experimenter can be confident that any observed differences must be due to differences in the treatments themselves (within the limitations established by statistical analysis).By randomizing the order in which experimental runs are done, you reduce the chance that differences in experimental materials or conditions strongly bias results. Randomization also lets you estimate the inherent variation in materials and conditions so that you can make valid statistical inferences based on the data from your experiment. In summation, because the researchers used randomization in this experiment, it eliminates the necessity to use control variables. Randomization will ensure that the groups will be as fairly distributed as possible.
+
+Next, your concern was that the candidates who were in charge of selecting the communes only where the treatment effects would not have any effect on their polling numbers. However, the answer is a bit more nuanced than the candidates simply choosing where the treatment took place. The candidates were allowed to help choose the communes that the experiemnts would take place, but that was as far as their decision making went as far as the randomization and selection in the experiment. Once the commune had been chosen, then the randomization took place by the scholars. The study Within a commune, four villages were chosen to be part of the experiment. Randomization was stratified geographically in the following manner. Within each commune, one village was randomly assigned to the treatment group, and the remaining three to the control group. The only exception to the rule is that in one commune (Dangbo), three villages were randomly assigned to treatment, and nine to the control group. This commune was itself divided into 3 separate strata, totaling 14 strata in 12 communes (14 treatment and 42 control villages). The stratified randomization guarantees a perfect balance regarding any characteristic that varies only at the commune level. As you can see, the researchers did a good job of ensuring that the decisions of where to implement the treatment were as random as possible. 
+
+Then there was the issue of whether or not the "control" villages were actually similar to the treatment villages. While there may be some way to discuss this using R and some code, it is even more simple to point you to Table 1 in the research article. There, the two scholars are laying out the summary statistics for both the treatment and control villages. The table shows that in quite a few aspects the statistics for each of the villages are very similar, which would provide evidence to the fact that there is no discernable differences between the villages, thus supporting the conclusions drawn by the researchers that the explanatory variable (clientelist versus town hall debates) is what is explaining this drop in cash payments to voters in the area. 
+
+The results of this experiment are important to talk about, for there are a few of them that we believe are necessary to discuss. First of all, we found that among the treatment groups there was a decrease in the amount of money recieved by the voters, and an even sharper decline in the amount of clientelism that was experienced by the voters. The code that we first used shows support for those ideas. More importantly, and perhaps more surprisingly, is the results that have to do with participation in these villages. The first person above argued that using clientelist approaches will be healthy for democracy and encourage the people to get out and vote, while the other candidate believed that the clientelist approach would be unhealthy for a country's democratic values. When running the code, we actually find that there is almost no discernable difference in the average turnout of the treatment villages and the control villages. This could have many implications for the way that candidates run their campaigns, but one of the most important implications might just be that running a clientelist campaign does not guaranteed you that more voters will come out and vote. Instead, it does not seem to have much, if any, effect on the overall turnout levels of the voters. 
+
+You may be wondering why we should use the conlusions of this research to draw broader implications for clientelism and campaigning in the world. After all, it was based on 24 villages in Benin, which many would argue is not going to be representative of very many different democracies, and therefor the results should be taken with a grain of salt, or perhaps the whole saltshaker. While this one study is not going to be the only one necessary to draw conclusions, it is an important step in understanding the dynamics of clientelism and how it can affect voter turnout and who voters decide to vote for. There are many places that experience clientelism regularly during elections, and the Benin experiment does its best to demonstrate what exactly happens throughout an election where traditional clientelism is met with the infusement of information that comes with a town hall information session.
+
+In essence, here we see that increasing the information given to voters rather than clientelistic approaches to campaigning does not significantly increase voter turnout, but it does help to address the issue of clientelism as a whole and helps to more evenly distribute the voters to candidates they truly prefer rather than the candidate that who simply makes them promises. While this number of villages was rather small, we can still draw some conclusions from it because of the fact that it was randomized and even when using similar systems, we found evidence supporting the claims. It is important that both of these candidates understand these results, because it can play a crucial part in structuring how they will campaign in the future. 
