@@ -121,5 +121,25 @@ think that a study with 24 villages ought to be a good way to learn about the
 effect of different styles of campaigning?
 
 
+```{r}
+library(dplyr)
+surveydat %>% group_by(treat) %>% summarize(age=mean(age))
+surveydat %>% group_by(treat) %>% summarize(primary_schooling=mean(primary_schooling))
+surveydat %>% group_by(treat) %>% summarize(secondary_schooling_or_more=mean(secondary_schooling_or_more))
+surveydat %>% group_by(treat) %>% summarize(reg_income=mean(reg_income))
+surveydat %>% group_by(treat) %>% summarize(member=mean(member))
+```
+```{r}
+
+blah <- lapply(1:10000,function(i){
+		       dat<-surveydat %>% group_by(sample(treat)) %>% summarize(age=mean(age)) 
+			 diff(dat$age)
+			 })
+
+res <- do.call("rbind",blah)
+summary(res)
+
+
+```
 # References
 
