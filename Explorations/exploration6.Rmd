@@ -1,6 +1,6 @@
 ---
 title: 'Exploration 6: Engaging with Alternative Explanations with By Matched Stratification'
-author: 'Jake Bowers'
+author: 'Rebeca Agosto, Sanghoon Kim, Seyoung Jung, Will Pettit, James Swigart, Hye Soo Nah'
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 bibliography: classbib.bib
 fontsize: 10pt
@@ -136,33 +136,116 @@ meddat<-transform(meddat, HomRate03=(HomCount2003/Pop2003)*1000)
 meddat<-transform(meddat, HomRate08=(HomCount2008/Pop2008)*1000)
 ```
 
-> We tried to make a matched design to counter alternative explanations for
-the intervention-versus-non-intervention comparison. We have `nhTrt` as our
-intervention or treatment and things measured in 2008 as outcomes with things
-measured in 2003 as occuring before the Metrocable was built. The other
-variables, measured before the treatment are plausibly covariates.
 
+Members: Rebeca Agosto, Sanghoon Kim, Seyoung Jung, Will Pettit, James Swigart, Hye Soo Nah
+
+I. Matching: What is matching? Why would we need to use matching? 
+From our previous class discussions, we understand that similarity between two groups is crucial in examining the difference in outcomes between these groups with regards to a certain “treatment.” That is, by creating a comparison group that can serve as an approximation of the counterfactual world, we are able to compare the differences between the treatment and control. 
+
+In the case of a non-experimental observational study (age and Trump support), it was impossible to “treat” age and thus we attempted to explain the effect of age on Trump support by “controlling” for three possible covariates; ideology, political knowledge and ethnicity. In last week’s field experiment on the Beninese villages, Fujiwara and Wantchekon purposely (or artificially) assigned randomized treatment (democratic campaigns) to the observed 24 villages. 
+
+This week’s study on Medellin is a natural experiment where treatment (Metrocable) was not purposely/artificially assigned by the researcher. That is, in terms of which neighborhood received the Metrocable system, the researcher had no leverage in assigning which neighborhood got “treated” and which did not. So in essence, the study on violence in Medellin DID have a treatment (unlike our previous examination of age and Trump support) but the treatment was NOT artificially assigned by a researcher (unlike the study on Beninese villages). Then, how can we make sure that we’re comparing apples to apples instead of apples to oranges in a situation where we are 1) not randomly assigning treatment and 2) faced with 45 neighborhoods and 20 possible covariates? We use a technique called matching, which can help us evaluate the effects of the treatment in natural experiments by resembling the conditions of a randomized experiment. Now we will discuss different ways of doing matching.
+
+A. Pairwise matching 
+Pairwise testing is a way of matching subjects from a treated group to a subject from a control group. This matching can be as simple as matching one variable such as age, but can be more complicated using several variables such as age, gender, education level, yearly income, etc.  The intention, though, is to get one observation in a treatment group to match with one observation in a control group to form a pair.  Adding more variables to consider when matching will increase the precision of the matching, but care should be taken to make sure that the variables are relevant to the question being asked and that so many variables aren’t used as to prevent matches from occurring.  While it may not be possible to find perfect matches, the closer the match, the easier the results are to interpret due to greater precision in the statistic.  In this way, matching is better than creating subsets based on ranges of data such as quintiles.  In pair wise matching, an observation is matched to one other observation instead of a group of similar observations.  In reality, you are unlikely to find to observations that match perfectly other than the treatment effect.  Since matches are probably not perfect, it’s important to get small distance so that treatment is closest to one particular match and not similar to several other controls.  This challenge is referred to as an “Assignment problem” and there are a variety of codes to try to solve it.  Rosenbaum (2010) references Hansen’s (2007) pairmatch function in the outmatch package as a suitable solution for R. As an example for this study
+```{r}
+pm<-pairmatch(nhTrt~HomCount2008, controls = 1, data = meddat)
+```
+Once you have found pairs of observations, comparing the observations is relatively easy with a regression between the treatments and the controls.  Since everything except the treatment should be matched, only the treatment effect should be measured. One potential downside to pairwise matching is that the treatment and control groups often don’t have the same number of observations.  Since we are looking for pairs, many observations (often controls) go unmatched and are removed from the comparison.  
+
+References
+Hansen, B.B.: Optmatch: Flexible, optimal matching for observational studies. R News 7, 18–24 (2007) 
+Rosenbaum, P. R. (2010). Design of Observational Studies. Springer.
+
+
+B. Propensity scores 
+Contrast to experimental studies, it is difficult to assign treatments to research subjects in observational studies. Matching attempts to simulate randomization by creating a sample of units that received the treatment that is comparable on all observed covariates to a sample of units that did not receive the treatment. Propensity scores are used as one of the ways to conduct matching. The purpose of this method is to control various covariates. All the confounders are combined and turned into a score, as a result, reducing the bias of the matching process. The score is estimated by a linear logit model and the fitted values are the estimates of the propensity score. The score tells us the conditional probability of exposure to treatment under the given combination of observed covariates. 
+Although this method provides comparability for observational studies, it cannot eliminate the effect of unobserved factors as in the case of experimental studies. The article on Medellin points out this issue as well. The possibility that unobserved factors confounded the estimated treatment effects cannot be ruled out. However, the extensive set of covariates used in propensity score matching minimizes the possibility. 
+
+
+Mahalanobis distances
+
+With a caliper, we eliminate the propensity distances that are larger than the caliper. The remaining values are the ones that have smaller distances between the treatment and the control. The values exceeding the caliper is substituted as infinite, ∞. Within the caliper, the distance is the Mahalanobis distance. The distances are ‘generalized to several variables the familiar notion of measuring distance in units of the standard deviation.’ With the binary indicator we used in this exploration, ‘the variance is largest for events that occur about half the time, and smallest for events with probabilities near zero and one’.
+ 
+Rank-based Mahalanobis distance is used as an alternative to the Mahalanobis distance. The ‘rank-based Mahalanobis’ has advantage over simple Mahalanobis method in that it is better at i) limiting the influence of outliers and ii) preventing heavily tied covariates from having increased influence due to reduced variance. The Rank-based Mahalanobis method gives the adjusted values for covariate matrix, which then decreases the importance of outliers and prevents outliers from inflating the variance for a variable. Rank-based Mahalanobis distance presents a sturdy choice for a distance between the treatment and the control.  
+
+
+Calipers
+
+A caliper is attempting to define the distance between the control and treatment group/individual that is considered acceptable for a match. If the observation were to fall outside of the defined caliper for the group, it would subsequently be dropped from consideration. If one is providing a vector of calipers, then there would need to be more than one caliper defined; in fact, this scenario would require that a caliper is defined for each of the covariates, thus enabling us to be able to measure each covariate in a certain dataset that has been defined. 
+Measuring in calipers is done by using standardized units, more easily defined as being measured in increments of the standard deviation. An example of this would be caliper=.5 (meaning the caliper will drop the measurements/matches that are not within .5 standard deviations of the covariate that is being measured. Any of the measurements/matches that fall out of this caliper are promptly dropped from consideration.
+Using calipers with propensity score matching randomly breaks up the treatment and control units and selects a random treated unit to match. The control unit that is nearest to this treatment unit with regards to propensity score is then matched to the treatment unit for comparing, unless the nearest control unit is still outside of the designated caliper. If that is the case, then the treatment unit does not receive a control unit to be matched up with. While this may seem to not be helpful, this caliper method is attempting to make sure that no bad matches are made, which can sometimes result in no matches being made at all. 
+
+In using calipers, there is a fine line to be walked, similar to that when trying to smooth non-linear regressions. If you create a caliper that is too large, it allows for the treatment unit to be matched up with a control unit that actually does not have that similar of propensity scores in the covariates. This will then mean that the results are not as trustworthy since you are comparing not that similar units. On the other side, if one were to create a caliper that was extremely small, it would enlarge the probability of having no matches for many of the treatment units. While you are avoiding bad matches by making a smaller caliper, by making the caliper too small you lose many of the opportunities that you would have to measure some of these treatment units with moderately similar control units. When trying to figure out the optimal caliper, one should take a look at the dataset they are working with and do some playing around with the data first. After getting a good idea of what some of the similarities and differences are in the data, you should be able to assign a fairly representative caliper that enables you to confidently match treatment and control units while making sure that these matches are tight enough to enhance the validity of the overall argument. 
+
+
+II. How to check covariate balance = how to assure that matching was done well
+
+The methods described previously are all intended to create matched pairs of treatment and control subjects (or districts) in order to eliminate the possibility of confounding variables confusing or invalidating our results. Because the effect of confounding variables can’t be eliminated via randomization, matching methods “balance” the covariates between the treated and control groups. This process is a similar idea to checking residuals in a regression. One common way of calculating how balanced covariates are after matching is to find the difference in treated minus control covariates proportions, computed before and after matching. This calculation should be smaller after matching, suggesting that the effect of covariates has been balanced out. In calculations, this process deals with the “absolute standardized differences” in covariates between treated and control groups.
+
+III. The Medellin natural experiment
+Medellín, Colombia – A transit project (the Metrocable) connecting isolated low-income neighborhoods to the city’s urban center (accompanied by municipal investment in neighborhood infrastructure –lighting, bridges, sidewalks, police, school and recreational facilities) provided ideal conditions for researchers to analyze the effects of funding public transportation (and other goods) on neighborhood violence. We call this a “natural experiment,” a study in which the individuals (or neighborhoods) assigned to the treatment conditions (access to the Metrocable) were determined by factors outside the control of the investigators, in this case, a government policy. Natural experiments are advantageous for investigators because they might provide conditions that would otherwise not be possible to create under an “artificial” or “controlled” experiment due to resource limitations or ethical considerations. However, they also pose a challenge to the perceived validity of the results because treatment groups are not assigned randomly.
+In the case of Medellín, a city with 16 districts, the treatment group was defined as the 25 neighborhoods in Districts 1 and 2 (where the first gondola system was installed) where the PREVIVA survey on neighborhoods and violence was conducted. The researchers looked at the results for the years 2003 (pre-intervention) and 2008 (after the Metrocable was finalized). The control groups were determined using an “agglomerative cluster analysis,” which groups objects into “clusters” so that the objects in the same group are more similar to each other than to objects in other groups. The 23 PREVIVA neighborhoods in Districts 4 and 8 clustered with Districts’ 1 and 2, meaning that they were more similar to each other than to the neighborhoods in any other district in Medellín. “The resulting sample contained 225 respondents from intervention neighborhoods and 241 respondents from control neighborhoods.”
+Since this selection process was not random (researcher did not choose where to implement the Metrocable), researchers needed to test the balance between the neighborhoods to ensure that the observed intervention effects were not caused by other variables. After testing for balance, they found the differences to be “large enough” and thus required matching, a technique that helps resemble the conditions of a randomized experiment. Matching neighborhoods on their propensity scores (the optmatch tool in R) ensures that they are as comparable as one would have expected under randomization, which deals with the problem of potentially confounding variables. The propensity scores yielded 21 matched pairs and 2 triplets of higher-propensity treatment neighborhoods matched to a shared control. They compared both with the XBalance function in R which calculates standardized mean differences along each covariate, which allows them to compare the simple randomization with the matching through the chi-square value in each test. As a result, they use the paired assignment model for the outcome analyses.
+
+IV. How do we know the matching was effective? (Did we do enough?) 
+
+As described previously, when matching methods are employed, it is necessary to check the effectiveness of the matching, by checking the balance of the covariates between treatment and control districts. The Medellín study surveyed 225 individuals from treatment (intervention) districts, and 241 from control districts to gather the data for covariates (from PREVIVA survey). In order to check the effectiveness of the matching performed, the researchers “tested for the presence of treatment effects by comparing mean differences of intervention and control neighborhoods’ change scores.” This process allows for a comparison of the effect of covariates on the outcome, before and after matching. By assuring that matching was done well, this eliminates the possibility of covariates, or confounders, interfering with the causal relationship being examined.
+
+V. Code
 
 ```{r eval=FALSE}
+# Part I - In the Part I, what we are doing is to draw values that are comparable. The values of HomRate03 from different districts may be affected by control variables, so we are going through all the Part I procedure to minimize the effects of errors and make the HomRate03 values comparable. 
+
+
 ## Some commands like a formula object:
 balfmla<-reformulate(c(names(meddat)[c(5:7,9:24)],"HomRate03"),response="nhTrt")
+# Reformulate creates the formula with the model. (nhTrt ~ nhClass + nhSisben + nhPopD + nhQP03 + nhPV03 + nhTP03 + nhBI03 + nhCE03 + nhNB03 + nhMale + nhAgeYoung + nhAgeMid + nhMarDom + nhSepDiv + nhOwn + nhRent + nhEmp + nhAboveHS + nhHS + HomRate03) 
+#Variables on the righthand side (nhClass ~ HomRate03) are the confounding covariates which can affect the likelihood that neighborhoods are assigned to the treatment variable and the outcome (homicide rates after the installation of metro) 
+
 
 ## Scalar distance on baseline outcome
 tmp <- meddat$HomRate03
 names(tmp) <- rownames(meddat)
+# Finding absolute differences between HomRate03 in every combination of treatment and control districts 
+# the lower the value, the more similar treatment and control districts are 
 absdist <- match_on(tmp, z = meddat$nhTrt)
+# Here, we’re using HomRate03 as a point of reference in matching treatment and control neighborhoods. The lower the absolute distance between a ‘HomRate03’ score of a treatment neighborhood and that of a control neighborhood, the similar these two neighborhoods are to each other. So does this mean that it is ok to compare the difference in treatment/non-treatment between “similar” groups based on ‘absdist’ numbers? Most likely not. Aside from the fact that we would be disregarding all of the other 19 possible covariates, the ‘absdist’ numbers for treatment neighborhood #111 is substantially higher than the rest of the treatment neighborhoods’ ‘absdist’ numbers (see hist(absdist) for these outliers). It seems that a better way to do matching here is to use propensity scores, where we take into consideration all of the 20 possible covariates and generate scores that tell us how likely each neighborhood is to have received the treatment.  
+
 
 ## Ordinary Propensity score
+# produces an equation that you can enter observed variables into to find the propensity score for each district
+# using logistic regression to estimate the propensity score. In the logit model, the outcome is the treatment (1 or 0) and the predictors are all the confounding covariates
+library(glmnet)
 glm1<-glm(balfmla,data=meddat,family=binomial)
+# From the boxplot above, we can see that there isn’t much overlap between the treatment and control group’s fitted scores. Furthermore, Rosenbaum(2010) states that matching based on the propensity score alone may produce treatment and control groups that, in aggregate, may be well-balanced in terms of covariates, but not as well-balanced when it comes to individual pairs that have similar propensity scores but huge differences in specific covariates. This means that if we were to use propensity score matches from the already-small area of overlap in the boxplot, there would still be a possibility that some of these pairs differ substantially in one or more covariate. To form closer pairs, Rosenbaum suggests using a distance that penalizes large differences on the propensity score, and then find individual pairs that are as close as possible.
+# runs data through our equation and produces coefficient results, with intercept of 1 
+# model.matrix(balfmla, data=meddat)
+# alters our formula, keeping all variables constant and subtracting 1 (value of intercept) - we presume this is intended to simplify/clean our results and make them easier to interpret 
+# update(balfmla,~ -1+.)d
+# running updated formula with data
+
 
 ## Propensity score using elastic net with lambda chosen by cross-validation
 library(glmnet)
 X <- model.matrix(update(balfmla,~ -1+.),data=meddat)
 cv.glmnet1<-cv.glmnet(x=X[,-1],y=meddat$nhTrt,family="binomial",alpha=.5)
+# we can see the same values as the first model.matrix, but now with an intercept of 0
+
+# Cross Validation = splitting data into sections and using the results of each section to check for accuracy across results 
+# because our results may be overfit, in the sense that they only work for the few districts we observed, we need to cross-validate to ensure that the results are applicable to other districts
+# ?cv.glmnet
+# alpha here means ‘elastic net optimization.’ We use ‘cv.glmnet’ to sort out relevant independent variables that work better for predicting the dependent variable.  In this exploration’s case where we have too many independent variables, it is possible that they can increase the noise and distortion of prediction. Therefore, we need to decrease the effect of error affecting our estimate. The minimizer of this estimate, ‘lambda,’ is derived through this process.  
+# In the process, the value of ‘alpha’ is set 0.5. The LASSO method is applied here, which is used to shrink down the number of used regressors, and so sort out only relevant variables from the battery of independent variables. The closer the value to 1, the LASSO shrinks the variables more, and on the other hand, when it becomes close to 0, the degree of shrinking decreases. Here, the alpha is set at 0.5, and the cross validation produces moderate level of simplification of independent variables. 
+
+
 
 ## Add scores back to data
 meddat$pscore<-predict(glm1) ## linear.predictors not probs
 meddat$penpscore<-predict(cv.glmnet1$glmnet.fit,newx=X[,-1],s=cv.glmnet1$lambda.min)
+# pscore is a list of predictions (ordinary propensities) using the glm1 model about the probaility that a district will receive the treatment 
+
+# penpscore is a list of propensity scores, between -1 and 1 → this score is simplified to reduce “noise” in the propensity scores, and is made using cross-validation
 
 ## Make distance matrices
 psdist<-match_on(nhTrt~pscore,data=meddat)
@@ -175,17 +258,29 @@ as.matrix(penpsdist)[1:5,1:5]
 par(mfrow=c(1,2))
 with(meddat,boxplot(split(pscore,nhTrt)))
 with(meddat,boxplot(split(penpscore,nhTrt)))
+# Here, the boxplots show the distribution of propensity scores before (left) and after (right) the adjustment through cross validation. In the former, we have outliers (e.g. -50) and the spread is large, making comparison difficult. What we have done is to adjust the distances, so that we can compare more easily. Also, in the latter boxplot, we see that there is now more overlap between the treatment and control group. The more the overlap between the treatment and control variable, the easier it is to find close matches. 
 
+
+### Part II
 ## Rank-Based Mahalanobis distance (Rosenbaum, Chap 8)
+# Using Mahalanobis distances, this compares the differences in covariates between treatment and control groups, and assigns each pair a distance value that can be used to choose matched pairs 
+# The rank-based Mahalanobis distance limits the influence of outliers and prevents heavily tied covariates, such as rare binary variables, from having increased influence due to reduced variance (Rosenbaum 2010, p. 171). We saw outliers in HomRate03, and upon looking up the variance of some of our other variables, using rank-based Mahalanobis distance does seem quite useful. According to the variances observed below, those covariates with a large variance will be discounted more in the regression. By performing rank-based Mahalanobis distance calculations, we are ranking the covariates in terms of “importance” or “significance” in order to not discount what we believe are important variables. Rosenbaum also says that the adjusted covariance matrix will have a constant diagonal (Not too sure what this means).
 mhdist<-match_on(balfmla,data=meddat,method="rank_mahalanobis")
 
 ## Do it
 fm1<-fullmatch(IHATEMYJOB,data=meddat) ##, min.controls=1) # min.controls=.5
 summary(fm1,data=meddat,min.controls=0,max.controls=Inf)
+# We see 21 pairs matched on one covariate, and 1 pair matched on two covariates 
+# fm1 shows different sets of dyad indicated by same numbers (e.g. 1.1, 1.2, 1.12, etc.), so that we can see which variables have been ‘matched.’ 
 
 ## Add matched set indicators back to data
 meddat$fm1<-NULL
 meddat[names(fm1),"fm1"]<-fm1
+# xBalance produces the standardized difference of covariate means = mean in treatment - mean in control, divided by standard deviation 
+# this tells us how well matched our pairs now are, by checking if the Mahalanobis distance process has well “balanced” our covariates 
+# The xBalance function of the RItools add-on package for R was used to match neighborhoods on the propensity score (estimated using a bias-reduced form of logistic regression) “according to several specifications after each match appraising the overall balance using a chi-square procedure similar to the one used before matching but comparing balance in the matched study to balance within hypothetical experiments that randomized within the matched sets.” (Appendix, p. 4) In other words, (as I understood it), the chi-square was used to compare the Mahalanobis distance between the matched intervention and control groups to the comparability that would have been achieved under a randomized experiment. 
+# This might also be useful: “We also noted the spread of matched discrepancies on the estimated propensity score, as a large such discrepancy suggests that, in contrast with controlled randomization among matched sites, the discrepant neighborhoods were not equally eligible to receive the intervention. As a working criterion for whether a particular matched discrepancy was large, we asked whether it exceeded the median matched discrepancy by a factor of four or more; when outlying discrepancies were found we introduced calipers on the propensity score to prevent them, beginning with permissive caliper requirements and narrowing the caliper only as far as was needed to eliminate them.” (Appendix, p. 5) 
+
 
 ## We have to show that we have adjusted enough. Did we adjust enough?
 newbalfmla <- update(balfmla,.~.+GETMEOUTOFHERESCORE)
@@ -202,12 +297,19 @@ diffswithinsets<-meddat %>% group_by(fm1) %>% summarize(meandiff = mean(HomRate0
 ## sapply(split(meddat,meddat$fm1),function(dat){
 ##	       with(dat,  mean(HomRate03[nhTrt==1]) - mean(HomRate03[nhTrt==0]))
 ##	      })
+
+# This tells us how balanced our pairs are - the average difference between covariates within a matched pair was 0.8647, while the maximum distance (our least balanced pair) had a distance of 8.9330 
+
 summary(diffswithinsets$meandiff)
 ## Which set is the biggest diff? Which neighborhoods are these?
 bigdiff<-diffswithinsets[which.max(diffswithinsets$meandiff),]
 meddat[meddat$fm1 == bigdiff$fm1,]
+# Shows us our “worst-matched” pair, or our most unbalanced pair
+# The biggest difference is between neighborhoods 111 and 407. 407 is the least likely to be chosen because of its propensity score.
 
 ## Diff pre-matching
+# Comparing the difference homicide rates in treatment and control districts before treatment was applied (Sarah) The difference of mean homicide rate in 2003 between treatment and control neighborhoods was 0.8824325.
+
 with(meddat, mean(HomRate03[nhTrt==1]) - mean(HomRate03[nhTrt==0]))
 
 ## What are the distances like? 
@@ -215,13 +317,20 @@ quantile(as.vector(absdist),seq(0,1,.1))
 
 ## CALIPER!! CARZY SETZ!!
 
+# calipers limit the distances that are allowed in matching (thus we can make sure that very unbalanced districts are NOT matched)
+# Another matrix of distances, using calipers
 caldist <- mhdist + caliper(absdist,1)
+# the following matrices compare visually for us the difference in varying ways of calculating distance between covariates → caldist displays the same values as mhdist, while replacing some of the values with Infinity → this means the calipers have deemed those distances too large to allow for an appropriate or balanced match
+
 as.matrix(absdist)[1:5,1:5]
 as.matrix(mhdist)[1:5,1:5]
 as.matrix(caldist)[1:5,1:5]
+# in the caldist matrix, some values from the mhdist matrix have changed to “infinity”, meaning that the distance between the two propensity scores concerned has been deemed too large to include in matching calculations
 
 fm2<-fullmatch(MYBOSSSUX,data=meddat,tol=.00001,min.controls=1)
 
+# creating another set of matched pairs using caliper-determined distances 
+# what the fm2 is different from the fm1 is the tolerance level and min.controls. Here, even though we put additional constraints on the ‘fullmatch’, we are seeing no changes in the values.
 meddat$fm2<-NULL
 meddat[names(fm2),"fm2"]<-fm2
 
@@ -234,6 +343,31 @@ xb2$overall
 xb2$results["HomRate03",,]
 xb2$results["pscore",,]
 @
+require(dplyr)
+# looking at average homicide rate in treatment districts in 2003
+meddat %>%
+  select(nhTrt, HomRate03) %>% 
+  filter(nhTrt==1) %>% 
+  summarize(mean(HomRate03))
+# looking at average homicide rate in control districts in 2003
+meddat %>%
+  select(nhTrt, HomRate03) %>% 
+  filter(nhTrt==0) %>% 
+  summarize(mean(HomRate03))
+# looking at average homicide rate in treatment districts in 2008
+meddat %>%
+  select(nhTrt, HomRate08) %>% 
+  filter(nhTrt==1) %>% 
+  summarize(mean(HomRate08))
+# looking at average homicide rate in control districts in 2008
+meddat %>%
+  select(nhTrt, HomRate08) %>% 
+  filter(nhTrt==0) %>% 
+  summarize(mean(HomRate08))  
+```
 
-# References
+VI. Conclusion
 
+In this week's exploration, we did not just compare the treatment and the control groups, but we made the groups more comparable by using methods of matching. We first tried to find the matching groups which have the least distance between treatment and control. As a result, we could derive more comparable sets of variables which have less variation and noise. 
+The decline in the homicide rate was 66% greater in intervention neighborhoods than in control neighborhoods, and resident reports of violence decreased 75% more in intervention neighborhoods. In our exploration, HomRate03 in treatment and control districts were compared. In control districts, the HomRate03 was 0.9833 per 1000 people in the raw unmatched data, and a slightly larger 0.9950 per 1000 after matching. In treatment districts, the raw data shows a rate of 1.8657 per 1000, and 1.8454 per 1000 in the matched datasets. 
+On the other hand, comparison of the average homicide rates in control and treatment districts in 2003 and 2008 shows that control districts homicide rate was 0.9833 people in 2003, and decreased to 0.6898 per 1000 people in 2008. For treatment districts, the homicide rate was 1.8657 per 1000 people in 2003, and 0.4000 per 1000 in 2008. There was a decrease in homicide rate for both control and treatment districts. The significant decrease in homicide rates in the treatment districts shows that installation of the Metrocable did decrease homicide rates. Therefore, we can reccommend to our friend funding public transportation as part of the U.N. anti-crime campaign.
